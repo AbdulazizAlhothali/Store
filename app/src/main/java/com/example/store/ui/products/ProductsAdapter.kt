@@ -49,11 +49,8 @@ class ProductsAdapter(private val activity: MainActivity, private val fragment: 
 
         val price = if (currency?.exchangeRate == null) current.price
         else current.price * currency?.exchangeRate!!
-        holder.mProductPrice.text = activity.resources.getString(
-            R.string.product_price,
-            currency?.symbol,
-            String.format("%2f", price)
-        )
+        holder.mProductPrice.text = activity.resources.getString(R.string.product_price, currency?.symbol,
+            String.format("%.2f", price))
         if (current.inCart) {
             holder.mAddToBasketButton.text =
                 activity.resources.getString(R.string.remove_from_basket)

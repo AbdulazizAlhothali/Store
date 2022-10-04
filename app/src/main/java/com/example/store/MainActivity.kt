@@ -8,10 +8,13 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import androidx.preference.PreferenceManager
+import com.braintreepayments.api.BraintreeClient
+import com.braintreepayments.api.PayPalClient
 import com.example.store.databinding.ActivityMainBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.loopj.android.http.AsyncHttpClient
@@ -24,11 +27,16 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val storeViewModel: StoreViewModel by viewModels()
 
-    // TODO: put the ISO code for your store's base currency as the value of the defCurrency variable
+    // TOD: put the ISO code for your store's base currency as the value of the defCurrency variable
     private val defCurrency = "GBP"
     private var exchangeData: JSONObject? = null
     private var selectedCurrency: Currency? = null
     private lateinit var sharedPreferences: SharedPreferences
+    companion object {
+        // TOD: Replace the value of the below variable with your Sandbox/Production Braintree tokenization key
+        private const val TOKENIZATION_KEY = "sandbox_fwp395c6_vqy2h6qv6bnprzwf"
+    }
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,16 +54,14 @@ class MainActivity : AppCompatActivity() {
 
         val navView: BottomNavigationView = binding.navView
 
-        val navController = findNavController(R.id.nav_host_fragment_activity_main)
-        // Passing each menu ID as a set of Ids because each
-        // menu should be considered as top level destinations.
-        val appBarConfiguration = AppBarConfiguration(
-            setOf(
-                R.id.navigation_home, R.id.navigation_dashboard, R.id.navigation_notifications
-            )
-        )
+        val navHostFragment = supportFragmentManager.findFragmentById(R.id.nav_host_fragment) as
+                NavHostFragment
+        val navController = navHostFragment.navController
+        val appBarConfiguration = AppBarConfiguration(setOf(R.id.navigation_products, R.id.navigation_checkout))
+
         setupActionBarWithNavController(navController, appBarConfiguration)
         navView.setupWithNavController(navController)
+
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -74,6 +80,7 @@ class MainActivity : AppCompatActivity() {
                 R.id.currency_gbp -> setCurrency("GBP")
                 R.id.currency_usd -> setCurrency("USD")
                 R.id.currency_eur -> setCurrency("EUR")
+                R.id.currency_sar -> setCurrency("SAR")
             }
         }
         return super.onOptionsItemSelected(item)
@@ -126,6 +133,7 @@ class MainActivity : AppCompatActivity() {
 // TODO: Define each additional currency your store supports here
                 "USD" -> currency = Currency(isoCode, "$", exchangeRate)
                 "EUR" -> currency = Currency(isoCode, "€", exchangeRate)
+                "SAR" -> currency = Currency(isoCode, "SAR", exchangeRate)
             }
         }
         sharedPreferences.edit().apply {
@@ -136,6 +144,8 @@ class MainActivity : AppCompatActivity() {
         storeViewModel.currency.value = currency
         //storeViewModel.calculateOrderTotal()
     }
+
+
 
 
 }

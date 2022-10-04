@@ -3,6 +3,11 @@
     <item android:title="@string/select_currency" >
         <menu>
             <!-- TODO: Create a menu item for each currency that your store supports -->
+
+            <item
+                android:id="@+id/currency_sar"
+                android:title="Riyal (SAR)" />
+
             <item
                 android:id="@+id/currency_gbp"
                 android:title="@string/currency_gbp" />

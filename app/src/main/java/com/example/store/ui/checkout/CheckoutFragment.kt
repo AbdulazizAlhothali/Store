@@ -8,8 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.store.MainActivity
-import com.example.store.StoreViewModel
+import com.example.store.*
 import com.example.store.databinding.FragmentCheckoutBinding
 
 class CheckoutFragment : Fragment() {
@@ -19,6 +18,8 @@ class CheckoutFragment : Fragment() {
     private val storeViewModel: StoreViewModel by activityViewModels()
 
     private lateinit var checkoutAdapter: CheckoutAdapter
+    private var amount: Double? = null
+    private var currency: Currency? = null
 
     // This property is only valid between onCreateView and
     // onDestroyView.
@@ -44,6 +45,7 @@ class CheckoutFragment : Fragment() {
         binding.cartRecyclerView.layoutManager = LinearLayoutManager(activity)
         binding.cartRecyclerView.itemAnimator = DefaultItemAnimator()
         binding.cartRecyclerView.adapter = checkoutAdapter
+        storeViewModel.calculateOrderTotal()
         storeViewModel.products.observe(viewLifecycleOwner) { products ->
             products?.let {
                 val basket = it.filter { p ->
@@ -80,6 +82,40 @@ class CheckoutFragment : Fragment() {
                 updateOrderTotal()
             }
         }
+
+        storeViewModel.orderTotal.observe(viewLifecycleOwner) {
+            amount = it
+            updateOrderTotal()
+        }
+        storeViewModel.currency.observe(viewLifecycleOwner) { c ->
+            c?.let {
+                currency = it
+// Detect whether the selected currency different than the currency currently being used
+                if (checkoutAdapter.currency == null || it.symbol != checkoutAdapter.currency?.symbol) {
+                    checkoutAdapter.currency = it
+                    checkoutAdapter.notifyItemRangeChanged(0, checkoutAdapter.itemCount)
+                }
+                updateOrderTotal()
+            }
+        }
+
+    }
+
+    fun removeProduct(product: Product) {
+        product.inCart = !product.inCart
+        val products = storeViewModel.products.value?.toMutableList() ?: mutableListOf()
+        val position = products.indexOf(product)
+        if (position != -1) {
+            products[position] = product
+            storeViewModel.products.value = products
+            storeViewModel.calculateOrderTotal()
+        }
+    }
+
+    private fun updateOrderTotal() {
+        if (currency == null || amount == null) return
+        val total = currency!!.symbol + String.format("%.2f", amount)
+        binding.orderTotal.text = resources.getString(R.string.order_total, total)
     }
 
     override fun onDestroyView() {
